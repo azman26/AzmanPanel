@@ -1,4 +1,4 @@
-# /usr/lib/enigma2/python/Plugins/Extensions/AzmanPanel/constants.py
+# /usr/lib/enigma2/python/Plugins/Extensions/AzmanPanel/main/constants.py
 
 # --- STAŁE ---
 
@@ -21,7 +21,7 @@ SOURCES_XML_TARGET_DIR = "/etc/epgimport"
 SOURCES_XML_FILENAME = "polandAzman.sources.xml"
 
 # Picony
-PICONS_BASE_URL = "https://www.topolowa4.pl/Picony/"
+PICONS_BASE_URL = "https://topolowa4.pl/ENIGMA2/PICONY/"
 DEFAULT_PICON_TARGET_DIR = "/media/hdd/picon"
 PICON_RECOMMENDED_DIRS = [("/media/hdd/picon", "HDD (/media/hdd/picon)"), ("/media/usb/picon", "USB (/media/usb/picon)")]
 
@@ -43,3 +43,7 @@ E2K_PLUGINS_TARGET_DIR = "/usr/lib/enigma2/python/Plugins/Extensions/E2Kodi/site
 IPTV_ORG_PL_M3U_URL = "https://raw.githubusercontent.com/iptv-org/iptv/master/streams/pl.m3u"
 IPTV_ORG_PL_BOUQUET_FILENAME = "userbouquet.iptvorg_pl.tv"
 IPTV_ORG_PL_BOUQUET_NAME = "iptv.org m3u PL"
+
+# Azman OPKG Feed
+FEED_CONF_URL = "https://raw.githubusercontent.com/azman26/azman-enigma2-repo/main/azman-feed.conf"
+FEED_CONF_TARGET_PATH = "/etc/opkg/azman-feed.conf"

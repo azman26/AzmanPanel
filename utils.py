@@ -1,8 +1,44 @@
-# /usr/lib/enigma2/python/Plugins/Extensions/AzmanPanel/utils.py
+# /usr/lib/enigma2/python/Plugins/Extensions/AzmanPanel/main/utils.py
 
 import os
 import zipfile
 from enigma import eDVBDB
+from Components.Console import Console
+
+class CommandRunner:
+    """
+    Klasa pomocnicza do asynchronicznego uruchamiania poleceń w konsoli
+    i otrzymywania powiadomienia o ich zakończeniu.
+    """
+    def __init__(self):
+        self.console = Console()
+        self.callback = None
+        self.output = []
+
+    def run(self, command, callback=None):
+        self.callback = callback
+        self.output = []
+        self.console.eUIData.add(self.on_console_output)
+        self.console.eConnectCallback.add(self.on_command_finished)
+        self.console.execute(command)
+
+    def on_console_output(self, data):
+        if data:
+            self.output.append(data.strip())
+            print("[CommandRunner] >>", data.strip())
+
+    def on_command_finished(self, result=None):
+        self.console.eUIData.remove(self.on_console_output)
+        self.console.eConnectCallback.remove(self.on_command_finished)
+        if self.callback:
+            self.callback(result, self.output)
+
+def run_command(command, callback=None):
+    """
+    Uproszczona funkcja do wywoływania CommandRunner.
+    """
+    runner = CommandRunner()
+    runner.run(command, callback)
 
 def safe_extract_zip_member(zip_ref, member, target_dir):
     """
@@ -26,5 +62,8 @@ def reload_dvb_services():
     Przeładowuje listę kanałów i bukietów w Enigma2.
     """
     print("[AzmanPanel] Reloading DVB services and bouquets.")
-    eDVBDB.getInstance().reloadServicelist()
-    eDVBDB.getInstance().reloadBouquets()
+    try:
+        eDVBDB.getInstance().reloadServicelist()
+        eDVBDB.getInstance().reloadBouquets()
+    except Exception as e:
+        print(f"[AzmanPanel utils] Failed to reload DVB services: {e}")

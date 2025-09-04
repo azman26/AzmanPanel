@@ -1,74 +1,47 @@
 <skin>
-    <!-- ======================== KLUCZOWA ZMIANA ======================== -->
-    <!-- Nazwa ekranu musi być identyczna jak nazwa klasy w Python -->
-    <screen name="AzmanPanelMainScreen" position="center,center" size="1500,880" title="Azman Panel" backgroundColor="#80000000" flags="wfNoBorder">
-    <!-- =============================================================== -->
+    <!-- Zoptymalizowano rozmiar ekranu i usunięto zbędne widgety -->
+    <screen name="AzmanPanelMainScreen" position="center,center" size="1500,620" title="Azman Panel" backgroundColor="#80000000" flags="wfNoBorder">
         
         <widget name="title" position="20,20" size="1200,50" font="Regular;40" halign="left" valign="center" foregroundColor="#FFFFFF" transparent="1" />
         <widget name="version_info" position="1230,30" size="250,30" font="Regular;22" halign="right" valign="center" foregroundColor="#FFFFFF" transparent="1" />
 
+        <!--
+        ======================================================================
+        ROZMIARY I POZYCJE
+        - Logo (ikona): 220x132
+        - Marker (tło): 263x172
+        ======================================================================
+        -->
+
         <!-- Rząd 0 -->
-        <widget name="marker_0x0" position="20,100" size="210,140" alphatest="blend" />
-        <widget name="logo_0x0" position="40,120" size="167,100" alphatest="blend" />
-        <widget name="marker_0x1" position="270,100" size="210,140" alphatest="blend" />
-        <widget name="logo_0x1" position="290,120" size="167,100" alphatest="blend" />
-        <!-- ... reszta widgetów pozostaje bez zmian ... -->
-        <widget name="marker_0x2" position="520,100" size="210,140" alphatest="blend" />
-        <widget name="logo_0x2" position="540,120" size="167,100" alphatest="blend" />
-        <widget name="marker_0x3" position="770,100" size="210,140" alphatest="blend" />
-        <widget name="logo_0x3" position="790,120" size="167,100" alphatest="blend" />
-        <widget name="marker_0x4" position="1020,100" size="210,140" alphatest="blend" />
-        <widget name="logo_0x4" position="1040,120" size="167,100" alphatest="blend" />
-        <widget name="marker_0x5" position="1270,100" size="210,140" alphatest="blend" />
-        <widget name="logo_0x5" position="1290,120" size="167,100" alphatest="blend" />
-
+        <widget name="marker_0x0" position="20,100" size="263,172" alphatest="blend" />
+        <widget name="logo_0x0" position="41,120" size="220,132" alphatest="blend" />
+        <widget name="marker_0x1" position="323,100" size="263,172" alphatest="blend" />
+        <widget name="logo_0x1" position="344,120" size="220,132" alphatest="blend" />
+        <widget name="marker_0x2" position="626,100" size="263,172" alphatest="blend" />
+        <widget name="logo_0x2" position="647,120" size="220,132" alphatest="blend" />
+        <widget name="marker_0x3" position="929,100" size="263,172" alphatest="blend" />
+        <widget name="logo_0x3" position="950,120" size="220,132" alphatest="blend" />
+        <widget name="marker_0x4" position="1232,100" size="263,172" alphatest="blend" />
+        <widget name="logo_0x4" position="1253,120" size="220,132" alphatest="blend" />
+        
         <!-- Rząd 1 -->
-        <widget name="marker_1x0" position="20,250" size="210,140" alphatest="blend" />
-        <widget name="logo_1x0" position="40,270" size="167,100" alphatest="blend" />
-        <widget name="marker_1x1" position="270,250" size="210,140" alphatest="blend" />
-        <widget name="logo_1x1" position="290,270" size="167,100" alphatest="blend" />
-        <widget name="marker_1x2" position="520,250" size="210,140" alphatest="blend" />
-        <widget name="logo_1x2" position="540,270" size="167,100" alphatest="blend" />
-        <widget name="marker_1x3" position="770,250" size="210,140" alphatest="blend" />
-        <widget name="logo_1x3" position="790,270" size="167,100" alphatest="blend" />
-        <widget name="marker_1x4" position="1020,250" size="210,140" alphatest="blend" />
-        <widget name="logo_1x4" position="1040,270" size="167,100" alphatest="blend" />
-        <widget name="marker_1x5" position="1270,250" size="210,140" alphatest="blend" />
-        <widget name="logo_1x5" position="1290,270" size="167,100" alphatest="blend" />
+        <widget name="marker_1x0" position="20,282" size="263,172" alphatest="blend" />
+        <widget name="logo_1x0" position="41,302" size="220,132" alphatest="blend" />
+        <widget name="marker_1x1" position="323,282" size="263,172" alphatest="blend" />
+        <widget name="logo_1x1" position="344,302" size="220,132" alphatest="blend" />
+        <widget name="marker_1x2" position="626,282" size="263,172" alphatest="blend" />
+        <widget name="logo_1x2" position="647,302" size="220,132" alphatest="blend" />
+        <widget name="marker_1x3" position="929,282" size="263,172" alphatest="blend" />
+        <widget name="logo_1x3" position="950,302" size="220,132" alphatest="blend" />
+        <widget name="marker_1x4" position="1232,282" size="263,172" alphatest="blend" />
+        <widget name="logo_1x4" position="1253,302" size="220,132" alphatest="blend" />
 
-        <!-- Rząd 2 -->
-        <widget name="marker_2x0" position="20,400" size="210,140" alphatest="blend" />
-        <widget name="logo_2x0" position="40,420" size="167,100" alphatest="blend" />
-        <widget name="marker_2x1" position="270,400" size="210,140" alphatest="blend" />
-        <widget name="logo_2x1" position="290,420" size="167,100" alphatest="blend" />
-        <widget name="marker_2x2" position="520,400" size="210,140" alphatest="blend" />
-        <widget name="logo_2x2" position="540,420" size="167,100" alphatest="blend" />
-        <widget name="marker_2x3" position="770,400" size="210,140" alphatest="blend" />
-        <widget name="logo_2x3" position="790,420" size="167,100" alphatest="blend" />
-        <widget name="marker_2x4" position="1020,400" size="210,140" alphatest="blend" />
-        <widget name="logo_2x4" position="1040,420" size="167,100" alphatest="blend" />
-        <widget name="marker_2x5" position="1270,400" size="210,140" alphatest="blend" />
-        <widget name="logo_2x5" position="1290,420" size="167,100" alphatest="blend" />
+        <!-- Opis na dole - zmieniona pozycja Y -->
+        <widget name="description" position="20,480" zPosition="2" size="1460,50" foregroundColor="white" valign="center" halign="center" font="Regular;32" transparent="1" />
         
-        <!-- Rząd 3 -->
-        <widget name="marker_3x0" position="20,550" size="210,140" alphatest="blend" />
-        <widget name="logo_3x0" position="40,570" size="167,100" alphatest="blend" />
-        <widget name="marker_3x1" position="270,550" size="210,140" alphatest="blend" />
-        <widget name="logo_3x1" position="290,570" size="167,100" alphatest="blend" />
-        <widget name="marker_3x2" position="520,550" size="210,140" alphatest="blend" />
-        <widget name="logo_3x2" position="540,570" size="167,100" alphatest="blend" />
-        <widget name="marker_3x3" position="770,550" size="210,140" alphatest="blend" />
-        <widget name="logo_3x3" position="790,570" size="167,100" alphatest="blend" />
-        <widget name="marker_3x4" position="1020,550" size="210,140" alphatest="blend" />
-        <widget name="logo_3x4" position="1040,570" size="167,100" alphatest="blend" />
-        <widget name="marker_3x5" position="1270,550" size="210,140" alphatest="blend" />
-        <widget name="logo_3x5" position="1290,570" size="167,100" alphatest="blend" />
-
-        <!-- Opis na dole -->
-        <widget name="description" position="20,750" zPosition="2" size="1460,50" foregroundColor="white" valign="center" halign="center" font="Regular;32" transparent="1" />
-        
-        <!-- Przyciski Pomocy -->
-        <ePixmap pixmap="/usr/lib/enigma2/python/Plugins/Extensions/AzmanPanel/icons/key_exit.png" position="1370,810" size="120,55" alphatest="blend" />
-        <ePixmap pixmap="/usr/lib/enigma2/python/Plugins/Extensions/AzmanPanel/icons/key_ok.png" position="1230,810" size="120,55" alphatest="blend" />
+        <!-- Przyciski Pomocy - zmieniona pozycja Y -->
+        <ePixmap pixmap="/usr/lib/enigma2/python/Plugins/Extensions/AzmanPanel/icons/key_exit.png" position="1370,550" size="120,55" alphatest="blend" />
+        <ePixmap pixmap="/usr/lib/enigma2/python/Plugins/Extensions/AzmanPanel/icons/key_ok.png" position="1230,550" size="120,55" alphatest="blend" />
     </screen>
 </skin>

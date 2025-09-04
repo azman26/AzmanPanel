@@ -1,9 +1,10 @@
-# /usr/lib/enigma2/python/Plugins/Extensions/AzmanPanel/screens.py
+# /usr/lib/enigma2/python/Plugins/Extensions/AzmanPanel/main/screens.py
 
 import os
 import shutil
 import tempfile
 import stat
+import urllib.request
 
 from enigma import eTimer
 from Components.ActionMap import ActionMap
@@ -40,7 +41,7 @@ class AzmanPanelMainScreen(Screen):
         self.temp_dir_e2k = None
         self.current_config_e2k = {}
 
-        self.GRID_ROWS, self.GRID_COLS = 4, 6
+        self.GRID_ROWS, self.GRID_COLS = 2, 5
         self.items_per_page = self.GRID_ROWS * self.GRID_COLS
         self.items = []
         self.markerPixmap = LoadPixmap(f"{PLUGIN_PATH}/icons/marker.png")
@@ -69,18 +70,21 @@ class AzmanPanelMainScreen(Screen):
 
     def prepare_menu(self):
         menu_definitions = [
-            ("Pluginy E2K", self.start_e2k_plugins_flow, "icon_e2k.png"),
-            ("Skiny E2K", self.start_e2k_skins_flow, "icon_skins.png"),
-            ("Bukiety IPTV", self.open_bouquet_source_selection, "icon_iptv.png"),
+            ("Zainstaluj Azman Feed", self.install_azman_feed, "icon_feed.png"),
+            ("Bukiety IPTV PL", self.start_iptv_pl_install, "icon_iptv_pl.png"),
+            ("Bukiety FAST", self.start_fast_ww_install, "icon_fast.png"),
+            ("Bukiety iptv.org", self.start_iptv_org_install, "icon_iptv_org.png"),
             ("Picony", self.open_picon_management_screen, "icon_picons.png"),
             ("EPG Sources", self.download_and_install_sources_xml, "icon_epg.png"),
+            ("Pluginy E2K", self.start_e2k_plugins_flow, "icon_e2k.png"),
+            ("Skiny E2K", self.start_e2k_skins_flow, "icon_skins.png"),
             # ### NOWA OPCJA W MENU ###
-            ("Zainstaluj Azman Feed", self.install_azman_feed, "icon_feed.png"),
+            ("Inne", self.open_other_options, "icon_other.png"),
         ]
         self.items = [{'text': t, 'func': f, 'pixmap': LoadPixmap(f"{PLUGIN_PATH}/icons/{i}")} for t, f, i in menu_definitions]
         self.draw_page()
 
-    # --- Pozostałe metody AzmanPanelMainScreen (bez zmian) ---
+    # --- Reszta metod bez zmian ---
     def draw_page(self):
         start_index = self.current_page * self.items_per_page
         for r in range(self.GRID_ROWS):
@@ -131,13 +135,37 @@ class AzmanPanelMainScreen(Screen):
     def _update_progress_ui(self, current_bytes, total_bytes):
         if self.progress_screen:
             self.progress_screen.setProgress(current_bytes, total_bytes)
-
+            
     # ### NOWA FUNKCJA-ZAŚLEPKA ###
+    def open_other_options(self):
+        self.session.open(MessageBox, "Ta funkcja jest w przygotowaniu.", type=MessageBox.TYPE_INFO, timeout=5)
+
+    # --- Logika instalatora Azman Feed ---
     def install_azman_feed(self):
-        self.session.open(MessageBox, "Instalacja Azman Feed\n\nTa funkcja jest w przygotowaniu.", type=MessageBox.TYPE_INFO, timeout=5)
+        message = "Ta operacja doda repozytorium Azman Feed do Twojego systemu.\n\nCzy chcesz kontynuować?"
+        if os.path.exists(constants.FEED_CONF_TARGET_PATH):
+            message = "Repozytorium Azman Feed jest już zainstalowane.\n\nCzy chcesz je nadpisać (zaktualizować)?"
+        self.session.openWithCallback(self._proceed_with_feed_install, MessageBox, message, MessageBox.TYPE_YESNO, timeout=10, default=True)
 
-    # --- Metody dla BUKETÓW, EPG, PICONÓW (bez większych zmian) ---
+    def _proceed_with_feed_install(self, confirmed):
+        if not confirmed:
+            self.session.open(MessageBox, "Instalacja anulowana.", type=MessageBox.TYPE_INFO, timeout=5)
+            return
+        try:
+            self.progress_screen = self.session.open(MessageBox, "Pobieranie pliku konfiguracyjnego...", type=MessageBox.TYPE_INFO, timeout=999)
+            urllib.request.urlretrieve(constants.FEED_CONF_URL, constants.FEED_CONF_TARGET_PATH)
+            if self.progress_screen: self.progress_screen.close()
+            self.progress_screen = self.session.open(MessageBox, "Plik pobrany.\nAktualizowanie listy pakietów (opkg update)...\n\nTo może potrwać chwilę...", type=MessageBox.TYPE_INFO, timeout=999)
+            utils.run_command("opkg update", self._on_opkg_update_finished)
+        except Exception as e:
+            if self.progress_screen: self.progress_screen.close()
+            self.session.open(MessageBox, f"Wystąpił błąd podczas instalacji feedu:\n{e}", type=MessageBox.TYPE_ERROR)
 
+    def _on_opkg_update_finished(self, result=None, output=None):
+        if self.progress_screen: self.progress_screen.close()
+        self.session.open(MessageBox, "Repozytorium Azman Feed zostało pomyślnie dodane i zaktualizowane!\n\nTwoje pakiety znajdziesz w:\nMenu -> Wtyczki -> Czerwony (Zarządzaj oprogramowaniem)", type=MessageBox.TYPE_INFO, timeout=15)
+        
+    # --- Pozostałe metody ---
     def open_picon_management_screen(self):
         self.session.open(MessageBox, "Funkcja w przygotowaniu.", type=MessageBox.TYPE_INFO, timeout=5)
 
@@ -163,33 +191,33 @@ class AzmanPanelMainScreen(Screen):
         self.final_epg_message_timer = eTimer()
         self.final_epg_message_timer.callback += boundFunction(self.session.open, MessageBox, message, type=msg_type, timeout=10)
         self.final_epg_message_timer.start(1, True)
+    
+    # --- Metody dla bukietów ---
+    def start_iptv_pl_install(self):
+        if self.temp_repo_dir: shutil.rmtree(self.temp_repo_dir, ignore_errors=True)
+        self.hide()
+        self.temp_repo_dir = tempfile.mkdtemp()
+        self.progress_screen = self.session.open(DownloadProgressScreen, title="Pobieranie listy bukietów IPTV PL...")
+        worker = RepoItemListWorker(zip_url=constants.GITHUB_BOUQUET_ZIP_URL, repo_name=constants.GITHUB_BOUQUET_REPO_NAME, temp_extraction_dir=self.temp_repo_dir, item_finder_func=self._find_bouquet_items, callback_progress=self._update_progress_ui, callback_finished=self._list_download_finished, parent_screen=self)
+        worker.start()
 
-    def open_bouquet_source_selection(self, *args):
-        self.session.openWithCallback(self._on_bouquet_source_selection, BouquetSourceSelectionScreen)
-
-    def _on_bouquet_source_selection(self, result):
-        if self.temp_repo_dir:
-            shutil.rmtree(self.temp_repo_dir, ignore_errors=True)
-            self.temp_repo_dir = None
-        if not result:
-            self.show()
-            return
-        source_map = {'standard': (constants.GITHUB_BOUQUET_ZIP_URL, constants.GITHUB_BOUQUET_REPO_NAME, "Pobieranie listy bukietów IPTV PL..."), 'fast': (constants.GITHUB_FAST_BOUQUET_ZIP_URL, constants.GITHUB_FAST_BOUQUET_REPO_NAME, "Pobieranie listy bukietów FAST...")}
-        if result in source_map:
-            self.hide()
-            zip_url, repo_name, title = source_map[result]
-            self.temp_repo_dir = tempfile.mkdtemp()
-            self.progress_screen = self.session.open(DownloadProgressScreen, title=title)
-            worker = RepoItemListWorker(zip_url=zip_url, repo_name=repo_name, temp_extraction_dir=self.temp_repo_dir, item_finder_func=self._find_bouquet_items, callback_progress=self._update_progress_ui, callback_finished=self._list_download_finished, parent_screen=self)
-            worker.start()
-        elif result == 'iptv_org_pl':
-            self.hide()
-            tmp_dir = tempfile.mkdtemp()
-            m3u_path = os.path.join(tmp_dir, "pl.m3u")
-            output_path = os.path.join(constants.BOUQUET_TARGET_DIR, constants.IPTV_ORG_PL_BOUQUET_FILENAME)
-            self.progress_screen = self.session.open(DownloadProgressScreen, title=f"Pobieranie '{constants.IPTV_ORG_PL_BOUQUET_NAME}'...")
-            worker = IptvOrgPlDownloadWorker(constants.IPTV_ORG_PL_M3U_URL, m3u_path, output_path, constants.IPTV_ORG_PL_BOUQUET_NAME, self._update_progress_ui, self._iptv_org_pl_download_finished, parent_screen=self)
-            worker.start()
+    def start_fast_ww_install(self):
+        if self.temp_repo_dir: shutil.rmtree(self.temp_repo_dir, ignore_errors=True)
+        self.hide()
+        self.temp_repo_dir = tempfile.mkdtemp()
+        self.progress_screen = self.session.open(DownloadProgressScreen, title="Pobieranie listy bukietów FAST...")
+        worker = RepoItemListWorker(zip_url=constants.GITHUB_FAST_BOUQUET_ZIP_URL, repo_name=constants.GITHUB_FAST_BOUQUET_REPO_NAME, temp_extraction_dir=self.temp_repo_dir, item_finder_func=self._find_bouquet_items, callback_progress=self._update_progress_ui, callback_finished=self._list_download_finished, parent_screen=self)
+        worker.start()
+        
+    def start_iptv_org_install(self):
+        if self.temp_repo_dir: shutil.rmtree(self.temp_repo_dir, ignore_errors=True)
+        self.hide()
+        tmp_dir = tempfile.mkdtemp()
+        m3u_path = os.path.join(tmp_dir, "pl.m3u")
+        output_path = os.path.join(constants.BOUQUET_TARGET_DIR, constants.IPTV_ORG_PL_BOUQUET_FILENAME)
+        self.progress_screen = self.session.open(DownloadProgressScreen, title=f"Pobieranie '{constants.IPTV_ORG_PL_BOUQUET_NAME}'...")
+        worker = IptvOrgPlDownloadWorker(constants.IPTV_ORG_PL_M3U_URL, m3u_path, output_path, constants.IPTV_ORG_PL_BOUQUET_NAME, self._update_progress_ui, self._iptv_org_pl_download_finished, parent_screen=self)
+        worker.start()
 
     def _find_bouquet_items(self, repo_path):
         found = []
@@ -201,13 +229,10 @@ class AzmanPanelMainScreen(Screen):
         return found
 
     def _list_download_finished(self, parent_screen, error_message, found_items, temp_extraction_dir):
-        if self.progress_screen:
-            self.progress_screen.close()
-            self.progress_screen = None
+        if self.progress_screen: self.progress_screen.close(); self.progress_screen = None
         if error_message or not found_items:
             msg = error_message or "Nie znaleziono żadnych elementów."
-            if temp_extraction_dir:
-                shutil.rmtree(temp_extraction_dir, ignore_errors=True)
+            if temp_extraction_dir: shutil.rmtree(temp_extraction_dir, ignore_errors=True)
             self.session.openWithCallback(self.show, MessageBox, msg, MessageBox.TYPE_ERROR, timeout=7)
             return
         item_list = [(path, os.path.basename(path)) for path in found_items]
@@ -222,9 +247,7 @@ class AzmanPanelMainScreen(Screen):
     def _on_multi_bouquet_selected(self, selected_paths):
         self.show()
         if not selected_paths:
-            if self.temp_repo_dir:
-                shutil.rmtree(self.temp_repo_dir, ignore_errors=True)
-                self.temp_repo_dir = None
+            if self.temp_repo_dir: shutil.rmtree(self.temp_repo_dir, ignore_errors=True); self.temp_repo_dir = None
             return
         installed_count, failed_count = 0, 0
         for path in selected_paths:
@@ -236,48 +259,34 @@ class AzmanPanelMainScreen(Screen):
                 bouquets_tv_path = os.path.join(constants.BOUQUET_TARGET_DIR, "bouquets.tv")
                 new_entry = f'#SERVICE 1:7:1:0:0:0:0:0:0:0:FROM BOUQUET "{dest_filename}" ORDER BY bouquet\n'
                 if not os.path.exists(bouquets_tv_path) or new_entry not in open(bouquets_tv_path, 'r', encoding='utf-8').read():
-                    with open(bouquets_tv_path, 'a', encoding='utf-8') as f:
-                        f.write(new_entry)
+                    with open(bouquets_tv_path, 'a', encoding='utf-8') as f: f.write(new_entry)
                 installed_count += 1
-            except Exception as e:
-                print(f"[AzmanPanel] Failed to install bouquet {path}: {e}")
-                failed_count += 1
-        if self.temp_repo_dir:
-            shutil.rmtree(self.temp_repo_dir, ignore_errors=True)
-            self.temp_repo_dir = None
+            except Exception as e: print(f"[AzmanPanel] Failed to install bouquet {path}: {e}"); failed_count += 1
+        if self.temp_repo_dir: shutil.rmtree(self.temp_repo_dir, ignore_errors=True); self.temp_repo_dir = None
         utils.reload_dvb_services()
         message = f"Zainstalowano {installed_count} z {len(selected_paths)} wybranych bukietów."
-        if failed_count > 0:
-            message += f"\n{failed_count} instalacji nie powiodło się."
+        if failed_count > 0: message += f"\n{failed_count} instalacji nie powiodło się."
         self.session.open(MessageBox, message, type=MessageBox.TYPE_INFO, timeout=10)
 
     def _iptv_org_pl_download_finished(self, parent_screen, error_message, final_message):
-        if parent_screen.progress_screen and parent_screen.progress_screen.shown:
-            parent_screen.progress_screen.close()
+        if parent_screen.progress_screen and parent_screen.progress_screen.shown: parent_screen.progress_screen.close()
         parent_screen.progress_screen = None
         message = final_message or error_message
         msg_type = MessageBox.TYPE_ERROR if error_message else MessageBox.TYPE_INFO
         if not error_message:
             utils.reload_dvb_services()
             message += "\n\nPrzeładowano listę kanałów."
-        self.final_bouquet_message_timer = eTimer()
-        self.final_bouquet_message_timer.callback += boundFunction(self.session.openWithCallback, self.open_bouquet_source_selection, MessageBox, message, type=msg_type, timeout=10)
-        self.final_bouquet_message_timer.start(1, True)
+        self.session.open(MessageBox, message, type=msg_type, timeout=10)
 
     # --- Metody dla E2K ---
-    
     def cleanup_e2k(self):
         if self.temp_dir_e2k:
             shutil.rmtree(self.temp_dir_e2k, ignore_errors=True)
             self.temp_dir_e2k = None
-
+    
     def _ask_for_restart_e2k(self, *args):
         if self.changes_made_e2k:
-            self.session.openWithCallback(
-                self._do_restart_gui, MessageBox, 
-                "Zainstalowano nowe dodatki E2K.\nZalecany jest restart GUI.\nCzy chcesz zrestartować GUI teraz?", 
-                MessageBox.TYPE_YESNO, timeout=15, default=True
-            )
+            self.session.openWithCallback(self._do_restart_gui, MessageBox, "Zainstalowano nowe dodatki E2K.\nZalecany jest restart GUI.\nCzy chcesz zrestartować GUI teraz?", MessageBox.TYPE_YESNO, timeout=15, default=True)
         self.changes_made_e2k = False
 
     def _do_restart_gui(self, confirmed):
@@ -294,101 +303,60 @@ class AzmanPanelMainScreen(Screen):
     def start_e2k_download(self, config):
         self.cleanup_e2k()
         self.current_config_e2k = config
-        
         if not os.path.exists(constants.E2KODI_BASE_DIR):
             self.session.open(MessageBox, f"Katalog E2Kodi ({constants.E2KODI_BASE_DIR}) nie znaleziony.", MessageBox.TYPE_ERROR, timeout=10)
             return
-        
         self.progress_screen = self.session.open(DownloadProgressScreen, title=f"Pobieranie listy {config['type']}...")
         worker = E2KListDownloader(config=config, callback_progress=self._update_progress_ui, callback_finished=self.on_e2k_list_downloaded)
         worker.start()
 
     def start_e2k_skins_flow(self):
-        self.start_e2k_download({
-            "type": "skinów", 
-            "url": constants.GITHUB_E2K_SKINS_REPO_URL, 
-            "repo_name": constants.E2K_SKINS_REPO_NAME, 
-            "target_dir": constants.E2K_SKINS_TARGET_DIR, 
-            "finder": self._find_skin_items
-        })
+        self.start_e2k_download({"type": "skinów", "url": constants.GITHUB_E2K_SKINS_REPO_URL, "repo_name": constants.E2K_SKINS_REPO_NAME, "target_dir": constants.E2K_SKINS_TARGET_DIR, "finder": self._find_skin_items})
 
     def start_e2k_plugins_flow(self):
-        self.start_e2k_download({
-            "type": "pluginów", 
-            "url": constants.GITHUB_E2K_PLUGINS_ZIP_URL, 
-            "repo_name": constants.E2K_PLUGINS_REPO_NAME, 
-            "target_dir": constants.E2K_PLUGINS_TARGET_DIR, 
-            "finder": self._find_plugin_items
-        })
+        self.start_e2k_download({"type": "pluginów", "url": constants.GITHUB_E2K_PLUGINS_ZIP_URL, "repo_name": constants.E2K_PLUGINS_REPO_NAME, "target_dir": constants.E2K_PLUGINS_TARGET_DIR, "finder": self._find_plugin_items})
 
     def on_e2k_list_downloaded(self, error_message, found_items, temp_dir):
-        if self.progress_screen:
-            self.progress_screen.close()
-            self.progress_screen = None
-        
+        if self.progress_screen: self.progress_screen.close(); self.progress_screen = None
         self.temp_dir_e2k = temp_dir
-
         if error_message or not found_items:
             msg = error_message or f"Nie znaleziono żadnych {self.current_config_e2k['type']}."
             self.session.open(MessageBox, msg, MessageBox.TYPE_ERROR)
             self.cleanup_e2k()
             return
-        
         item_list = [(item['path'], item['name']) for item in found_items]
         self.open_selection_timer_e2k = eTimer()
         self.open_selection_timer_e2k.callback += boundFunction(self.show_e2k_selection_screen, item_list)
         self.open_selection_timer_e2k.start(1, True)
     
     def show_e2k_selection_screen(self, item_list):
-        self.session.openWithCallback(
-            self.on_e2k_items_selected,
-            AzmanSelectListScreen,
-            f"Wybierz {self.current_config_e2k['type']} do instalacji",
-            item_list
-        )
+        self.session.openWithCallback(self.on_e2k_items_selected, AzmanSelectListScreen, f"Wybierz {self.current_config_e2k['type']} do instalacji", item_list)
 
     def on_e2k_items_selected(self, selected_paths):
-        if not selected_paths:
-            self.cleanup_e2k()
-            return
-
+        if not selected_paths: self.cleanup_e2k(); return
         target_dir = self.current_config_e2k['target_dir']
-        
         if not os.path.isdir(target_dir):
-            try:
-                os.makedirs(target_dir)
+            try: os.makedirs(target_dir)
             except OSError as e:
                 self.session.open(MessageBox, f"Błąd tworzenia katalogu docelowego:\n{target_dir}\n{e}", MessageBox.TYPE_ERROR)
-                self.cleanup_e2k()
-                return
-
+                self.cleanup_e2k(); return
         installed_count, failed_count, installed_names = 0, 0, []
         for source_path in selected_paths:
             try:
                 item_name = os.path.basename(source_path)
                 dest_path = os.path.join(target_dir, item_name)
-                if os.path.exists(dest_path):
-                    shutil.rmtree(dest_path)
+                if os.path.exists(dest_path): shutil.rmtree(dest_path)
                 shutil.copytree(source_path, dest_path)
                 installed_names.append(item_name)
                 installed_count += 1
-            except Exception as e:
-                print(f"[AzmanPanel E2K] Błąd instalacji {item_name}: {e}")
-                failed_count += 1
-        
+            except Exception as e: print(f"[AzmanPanel E2K] Błąd instalacji {item_name}: {e}"); failed_count += 1
         self.cleanup_e2k()
-        
-        if installed_count > 0:
-            self.changes_made_e2k = True
-        
+        if installed_count > 0: self.changes_made_e2k = True
         message = f"Zainstalowano: {installed_count}\nBłędy: {failed_count}"
-        if installed_names:
-            message += "\n\nZainstalowane pozycje:\n" + "\n".join(f"- {name}" for name in installed_names)
-            
+        if installed_names: message += "\n\nZainstalowane pozycje:\n" + "\n".join(f"- {name}" for name in installed_names)
         self.session.openWithCallback(self._ask_for_restart_e2k, MessageBox, message, type=MessageBox.TYPE_INFO, timeout=10)
 
-
-# --- POZOSTAŁE KLASY EKRANÓW (bez zmian) ---
+# Pozostałe klasy ekranów
 
 class AzmanSelectListScreen(Screen):
     skin = """
@@ -448,36 +416,6 @@ class AzmanSelectListScreen(Screen):
 
     def cancel(self):
         self.close([])
-
-class BouquetSourceSelectionScreen(Screen):
-    skin = """
-        <screen name="BouquetSourceSelectionScreen" title="Wybierz źródło bukietów" position="center,center" size="1012,632">
-            <widget name="title" position="center,5" size="987,70" font="Regular;31" halign="center" valign="top" />
-            <widget name="info_label" position="13,76" size="987,442" font="Regular;28" halign="center" valign="center" transparent="1" />
-            <ePixmap pixmap="/usr/lib/enigma2/python/Plugins/Extensions/AzmanPanel/red.png" position="25,557" size="37,51" alphatest="blend" />
-            <widget source="key_red" render="Label" position="70,557" size="180,51" zPosition="3" font="Regular; 28" transparent="1" />
-            <ePixmap pixmap="/usr/lib/enigma2/python/Plugins/Extensions/AzmanPanel/green.png" position="265,557" size="37,51" alphatest="blend" />
-            <widget source="key_green" render="Label" position="310,557" size="290,51" zPosition="3" font="Regular; 28" transparent="1" />
-            <ePixmap pixmap="/usr/lib/enigma2/python/Plugins/Extensions/AzmanPanel/yellow.png" position="370,557" size="37,51" alphatest="blend" />
-            <widget source="key_yellow" render="Label" position="415,557" size="290,51" zPosition="3" font="Regular; 28" transparent="1" />
-            <ePixmap pixmap="/usr/lib/enigma2/python/Plugins/Extensions/AzmanPanel/blue.png" position="715,557" size="37,51" alphatest="blend" />
-            <widget source="key_blue" render="Label" position="760,557" size="230,51" zPosition="3" font="Regular; 28" transparent="1" />
-        </screen>
-    """
-    def __init__(self, session):
-        Screen.__init__(self, session)
-        self.setTitle("Wybierz źródło bukietów")
-        self["title"] = Label("Wybierz rodzaj bukietów do pobrania")
-        self["info_label"] = Label("Wybierz źródło, z którego chcesz pobrać bukiety kanałów IPTV.")
-        self["key_red"] = StaticText("Anuluj")
-        self["key_green"] = StaticText("IPTV PL")
-        self["key_yellow"] = StaticText("FAST Worldwide")
-        self["key_blue"] = StaticText("iptv.org m3u PL")
-        self["actions"] = ActionMap(["OkCancelActions", "ColorActions"], {
-            "cancel": lambda: self.close(None), "red": lambda: self.close(None), "back": lambda: self.close(None),
-            "green": lambda: self.close('standard'), "yellow": lambda: self.close('fast'),
-            "blue": lambda: self.close('iptv_org_pl')
-        }, -1)
 
 class DownloadProgressScreen(Screen):
     skin = """
