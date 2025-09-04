@@ -1,7 +1,7 @@
 <skin>
     <!-- ======================== KLUCZOWA ZMIANA ======================== -->
     <!-- Nazwa ekranu musi być identyczna jak nazwa klasy w Python -->
-    <screen name="AzmanPanelMainScreen" position="center,center" size="1500,880" title="Azman Panel" backgroundColor="#00000000" flags="wfNoBorder">
+    <screen name="AzmanPanelMainScreen" position="center,center" size="1500,880" title="Azman Panel" backgroundColor="#80000000" flags="wfNoBorder">
     <!-- =============================================================== -->
         
         <widget name="title" position="20,20" size="1200,50" font="Regular;40" halign="left" valign="center" foregroundColor="#FFFFFF" transparent="1" />
