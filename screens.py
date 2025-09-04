@@ -25,7 +25,8 @@ PLUGIN_PATH = os.path.dirname(os.path.realpath(__file__))
 # Importy z lokalnych modułów
 from . import constants, utils
 from .workers import (PiconInstallationWorker, PiconZipListWorker, RepoItemListWorker,
-                      E2KListDownloader, SourcesXmlDownloadWorker, IptvOrgPlDownloadWorker)
+                      E2KListDownloader, SourcesXmlDownloadWorker, IptvOrgPlDownloadWorker,
+                      FeedInstallerWorker)
 
 # --- GŁÓWNY EKRAN PLUGINU (WERSJA - STATYCZNA SIATKA) ---
 loadSkin(f"{PLUGIN_PATH}/skin.xml")
@@ -49,7 +50,10 @@ class AzmanPanelMainScreen(Screen):
 
         self["title"] = Label("Azman Panel")
         self["version_info"] = Label(constants.PLUGIN_VERSION)
+        
+        # ZMIANA: Inicjalizacja widgetów opisów
         self["description"] = Label("")
+        self["selected_title"] = StaticText("") # NOWY StaticText dla opisu pod tytułem
 
         for r in range(self.GRID_ROWS):
             for c in range(self.GRID_COLS):
@@ -69,22 +73,23 @@ class AzmanPanelMainScreen(Screen):
         self.onClose.append(self.__onClose)
 
     def prepare_menu(self):
+        # ZMIANA: Dodano czwarty element - krótki opis
         menu_definitions = [
-            ("Zainstaluj Azman Feed", self.install_azman_feed, "icon_feed.png"),
-            ("Bukiety IPTV PL", self.start_iptv_pl_install, "icon_iptv_pl.png"),
-            ("Bukiety FAST", self.start_fast_ww_install, "icon_fast.png"),
-            ("Bukiety iptv.org", self.start_iptv_org_install, "icon_iptv_org.png"),
-            ("Picony", self.open_picon_management_screen, "icon_picons.png"),
-            ("EPG Sources", self.download_and_install_sources_xml, "icon_epg.png"),
-            ("Pluginy E2K", self.start_e2k_plugins_flow, "icon_e2k.png"),
-            ("Skiny E2K", self.start_e2k_skins_flow, "icon_skins.png"),
-            # ### NOWA OPCJA W MENU ###
-            ("Inne", self.open_other_options, "icon_other.png"),
+            # (Tytuł kafelka, funkcja, ikona, opis szczegółowy)
+            ("Azman Feed", self.install_azman_feed, "icon_feed.png", "Instalacja dodatków z prywatnego repozytorium OPKG Azman"),
+            ("Bukiety IPTV PL", self.start_iptv_pl_install, "icon_iptv_pl.png", "Instalacja list kanałów IPTV z polskimi kanałami"),
+            ("Bukiety FAST", self.start_fast_ww_install, "icon_fast.png", "Instalacja darmowych kanałów z reklamami (FAST) z całego świata"),
+            ("Bukiety iptv.org", self.start_iptv_org_install, "icon_iptv_org.png", "Konwersja i instalacja polskiej listy M3U z serwisu iptv-org"),
+            ("Picony", self.open_picon_management_screen, "icon_picons.png", "Pobieranie i zarządzanie piconami dla Twoich kanałów"),
+            ("EPG Sources", self.download_and_install_sources_xml, "icon_epg.png", "Pobieranie źródeł EPG dla EPG Importera"),
+            ("Pluginy E2K", self.start_e2k_plugins_flow, "icon_e2k.png", "Instalacja wtyczek do dodatku E2Kodi"),
+            ("Skiny E2K", self.start_e2k_skins_flow, "icon_skins.png", "Instalacja skórek do dodatku E2Kodi"),
+            ("Inne", self.open_other_options, "icon_other.png", "Pozostałe narzędzia i opcje konfiguracyjne"),
         ]
-        self.items = [{'text': t, 'func': f, 'pixmap': LoadPixmap(f"{PLUGIN_PATH}/icons/{i}")} for t, f, i in menu_definitions]
+        # ZMIANA: Zaktualizowano pętlę, aby uwzględniała opis
+        self.items = [{'text': t, 'func': f, 'pixmap': LoadPixmap(f"{PLUGIN_PATH}/icons/{i}"), 'desc': d} for t, f, i, d in menu_definitions]
         self.draw_page()
 
-    # --- Reszta metod bez zmian ---
     def draw_page(self):
         start_index = self.current_page * self.items_per_page
         for r in range(self.GRID_ROWS):
@@ -102,13 +107,21 @@ class AzmanPanelMainScreen(Screen):
         for r in range(self.GRID_ROWS):
             for c in range(self.GRID_COLS):
                 self[f"marker_{r}x{c}"].hide()
+        
         sel_r, sel_c = self.selected_pos
         item_index = self.current_page * self.items_per_page + (sel_r * self.GRID_COLS + sel_c)
+        
         if item_index < len(self.items):
             self[f"marker_{sel_r}x{sel_c}"].instance.setPixmap(self.markerPixmap)
             self[f"marker_{sel_r}x{sel_c}"].show()
-            self["description"].setText(self.items[item_index]['text'])
+            
+            # ZMIANA: Aktualizacja obu opisów
+            selected_item = self.items[item_index]
+            self["selected_title"].setText(selected_item['text'])
+            self["description"].setText(selected_item['desc'])
         else:
+            # Czyszczenie opisów, jeśli zaznaczenie jest puste
+            self["selected_title"].setText("")
             self["description"].setText("")
 
     def move(self, d_row, d_col):
@@ -136,11 +149,9 @@ class AzmanPanelMainScreen(Screen):
         if self.progress_screen:
             self.progress_screen.setProgress(current_bytes, total_bytes)
             
-    # ### NOWA FUNKCJA-ZAŚLEPKA ###
     def open_other_options(self):
         self.session.open(MessageBox, "Ta funkcja jest w przygotowaniu.", type=MessageBox.TYPE_INFO, timeout=5)
 
-    # --- Logika instalatora Azman Feed ---
     def install_azman_feed(self):
         message = "Ta operacja doda repozytorium Azman Feed do Twojego systemu.\n\nCzy chcesz kontynuować?"
         if os.path.exists(constants.FEED_CONF_TARGET_PATH):
@@ -151,21 +162,17 @@ class AzmanPanelMainScreen(Screen):
         if not confirmed:
             self.session.open(MessageBox, "Instalacja anulowana.", type=MessageBox.TYPE_INFO, timeout=5)
             return
-        try:
-            self.progress_screen = self.session.open(MessageBox, "Pobieranie pliku konfiguracyjnego...", type=MessageBox.TYPE_INFO, timeout=999)
-            urllib.request.urlretrieve(constants.FEED_CONF_URL, constants.FEED_CONF_TARGET_PATH)
-            if self.progress_screen: self.progress_screen.close()
-            self.progress_screen = self.session.open(MessageBox, "Plik pobrany.\nAktualizowanie listy pakietów (opkg update)...\n\nTo może potrwać chwilę...", type=MessageBox.TYPE_INFO, timeout=999)
-            utils.run_command("opkg update", self._on_opkg_update_finished)
-        except Exception as e:
-            if self.progress_screen: self.progress_screen.close()
-            self.session.open(MessageBox, f"Wystąpił błąd podczas instalacji feedu:\n{e}", type=MessageBox.TYPE_ERROR)
+        self.progress_screen = self.session.open(MessageBox, "Instalowanie Azman Feed...\n\nTo może potrwać do 2 minut...", type=MessageBox.TYPE_INFO, timeout=999)
+        worker = FeedInstallerWorker(parent_screen=self, callback_finished=self._on_feed_install_finished)
+        worker.start()
 
-    def _on_opkg_update_finished(self, result=None, output=None):
+    def _on_feed_install_finished(self, error_message):
         if self.progress_screen: self.progress_screen.close()
-        self.session.open(MessageBox, "Repozytorium Azman Feed zostało pomyślnie dodane i zaktualizowane!\n\nTwoje pakiety znajdziesz w:\nMenu -> Wtyczki -> Czerwony (Zarządzaj oprogramowaniem)", type=MessageBox.TYPE_INFO, timeout=15)
+        if error_message:
+            self.session.open(MessageBox, f"Wystąpił błąd podczas instalacji:\n{error_message}", type=MessageBox.TYPE_ERROR)
+        else:
+            self.session.open(MessageBox, "Repozytorium Azman Feed zostało pomyślnie dodane i zaktualizowane!\n\nTwoje pakiety znajdziesz w:\nMenu -> Wtyczki -> Czerwony (Zarządzaj oprogramowaniem)", type=MessageBox.TYPE_INFO, timeout=15)
         
-    # --- Pozostałe metody ---
     def open_picon_management_screen(self):
         self.session.open(MessageBox, "Funkcja w przygotowaniu.", type=MessageBox.TYPE_INFO, timeout=5)
 
@@ -175,16 +182,14 @@ class AzmanPanelMainScreen(Screen):
         self.session.openWithCallback(self._confirm_and_proceed_download_sources_xml, MessageBox, f"Czy chcesz pobrać i nadpisać plik:\n'{constants.SOURCES_XML_FILENAME}'\n\nw lokalizacji:\n{constants.SOURCES_XML_TARGET_DIR}?", MessageBox.TYPE_YESNO, timeout=10, default=False)
 
     def _confirm_and_proceed_download_sources_xml(self, confirmed):
-        if not confirmed:
-            return
+        if not confirmed: return
         target_path = os.path.join(constants.SOURCES_XML_TARGET_DIR, constants.SOURCES_XML_FILENAME)
         self.progress_screen = self.session.open(DownloadProgressScreen, title=f"Pobieranie {constants.SOURCES_XML_FILENAME}...")
         worker = SourcesXmlDownloadWorker(constants.SOURCES_XML_URL, target_path, self._update_progress_ui, self._on_generic_download_finished, parent_screen=self)
         worker.start()
 
     def _on_generic_download_finished(self, parent_screen, error_message, final_message, *args):
-        if parent_screen.progress_screen and parent_screen.progress_screen.shown:
-            parent_screen.progress_screen.close()
+        if parent_screen.progress_screen and parent_screen.progress_screen.shown: parent_screen.progress_screen.close()
         parent_screen.progress_screen = None
         message = final_message or error_message
         msg_type = MessageBox.TYPE_ERROR if error_message else MessageBox.TYPE_INFO
@@ -192,7 +197,6 @@ class AzmanPanelMainScreen(Screen):
         self.final_epg_message_timer.callback += boundFunction(self.session.open, MessageBox, message, type=msg_type, timeout=10)
         self.final_epg_message_timer.start(1, True)
     
-    # --- Metody dla bukietów ---
     def start_iptv_pl_install(self):
         if self.temp_repo_dir: shutil.rmtree(self.temp_repo_dir, ignore_errors=True)
         self.hide()
@@ -278,7 +282,6 @@ class AzmanPanelMainScreen(Screen):
             message += "\n\nPrzeładowano listę kanałów."
         self.session.open(MessageBox, message, type=msg_type, timeout=10)
 
-    # --- Metody dla E2K ---
     def cleanup_e2k(self):
         if self.temp_dir_e2k:
             shutil.rmtree(self.temp_dir_e2k, ignore_errors=True)
@@ -356,8 +359,6 @@ class AzmanPanelMainScreen(Screen):
         if installed_names: message += "\n\nZainstalowane pozycje:\n" + "\n".join(f"- {name}" for name in installed_names)
         self.session.openWithCallback(self._ask_for_restart_e2k, MessageBox, message, type=MessageBox.TYPE_INFO, timeout=10)
 
-# Pozostałe klasy ekranów
-
 class AzmanSelectListScreen(Screen):
     skin = """
         <screen name="AzmanSelectListScreen" title="Wybierz" position="center,center" size="1012,632">
@@ -391,8 +392,7 @@ class AzmanSelectListScreen(Screen):
 
     def toggle_selection(self):
         current = self["list"].getCurrent()
-        if not current:
-            return
+        if not current: return
         path_value = current[1]
         if path_value in self.selected_items:
             self.selected_items.remove(path_value)

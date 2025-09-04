@@ -1,9 +1,16 @@
 <skin>
-    <!-- Zoptymalizowano rozmiar ekranu i usunięto zbędne widgety -->
-    <screen name="AzmanPanelMainScreen" position="center,center" size="1500,620" title="Azman Panel" backgroundColor="#80000000" flags="wfNoBorder">
+    <screen name="AzmanPanelMainScreen" position="center,center" size="1500,620" title="Azman Panel" backgroundColor="#D9000000" flags="wfNoBorder">
         
-        <widget name="title" position="20,20" size="1200,50" font="Regular;40" halign="left" valign="center" foregroundColor="#FFFFFF" transparent="1" />
-        <widget name="version_info" position="1230,30" size="250,30" font="Regular;22" halign="right" valign="center" foregroundColor="#FFFFFF" transparent="1" />
+        <!-- ZMIANA: Zmniejszono szerokość tytułu, aby zrobić miejsce na opis aktywnej opcji -->
+        <widget name="title" position="20,20" size="250,50" font="Regular;40" halign="left" valign="center" foregroundColor="#FFFFFF" transparent="1" />
+        
+        <!-- NOWY WIDGET: Opis aktywnej opcji (np. "Bukiety IPTV PL") obok tytułu -->
+        <widget source="selected_title" render="Label" position="270,20" size="950,50" font="Regular;40" halign="left" valign="center" foregroundColor="#389416" transparent="1" />
+
+        <widget name="version_info" position="1230,30" size="250,30" font="Regular;24" halign="right" valign="center" foregroundColor="#FFFFFF" transparent="1" />
+
+        <!-- NOWY WIDGET: Nieprzezroczysty pasek pod tytułem -->
+        <ePixmap pixmap="skin_default/blank.png" position="20,80" size="1460,3" color="#FFFFFF" alphatest="blend" zPosition="1" />
 
         <!--
         ======================================================================
@@ -37,10 +44,10 @@
         <widget name="marker_1x4" position="1232,282" size="263,172" alphatest="blend" />
         <widget name="logo_1x4" position="1253,302" size="220,132" alphatest="blend" />
 
-        <!-- Opis na dole - zmieniona pozycja Y -->
+        <!-- Opis na dole - teraz będzie wyświetlał szczegółowy opis -->
         <widget name="description" position="20,480" zPosition="2" size="1460,50" foregroundColor="white" valign="center" halign="center" font="Regular;32" transparent="1" />
         
-        <!-- Przyciski Pomocy - zmieniona pozycja Y -->
+        <!-- Przyciski Pomocy -->
         <ePixmap pixmap="/usr/lib/enigma2/python/Plugins/Extensions/AzmanPanel/icons/key_exit.png" position="1370,550" size="120,55" alphatest="blend" />
         <ePixmap pixmap="/usr/lib/enigma2/python/Plugins/Extensions/AzmanPanel/icons/key_ok.png" position="1230,550" size="120,55" alphatest="blend" />
     </screen>
