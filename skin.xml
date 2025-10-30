@@ -1,0 +1,90 @@
+<skin>
+    <!-- GŁÓWNY EKRAN PANELU -->
+    <screen name="AzmanPanelMainScreen" position="center,center" size="1500,830" title="Azman Panel" backgroundColor="#00000000" flags="wfNoBorder">
+        <eLabel position="0,0" size="1500,95" backgroundColor="#33000000" zPosition="-1" />
+        <eLabel position="0,695" size="1500,135" backgroundColor="#33000000" zPosition="-1" />
+        <eLabel position="0,95" size="1500,600" backgroundColor="#4D000000" zPosition="-1" />
+        <widget name="title" position="20,20" size="250,50" font="Regular;40" halign="left" valign="center" foregroundColor="#FFFFFF" transparent="1" />
+        <widget source="selected_title" render="Label" position="270,20" size="950,50" font="Regular;40" halign="left" valign="center" foregroundColor="#389416" transparent="1" />
+        <widget name="version_info" position="1230,30" size="250,30" font="Regular;32" halign="right" valign="center" foregroundColor="#FFFFFF" transparent="1" />
+        <widget name="marker_0x0" position="20,100" size="263,172" alphatest="blend" />
+        <widget name="logo_0x0" position="41,120" size="220,132" alphatest="blend" />
+        <widget name="marker_0x1" position="323,100" size="263,172" alphatest="blend" />
+        <widget name="logo_0x1" position="344,120" size="220,132" alphatest="blend" />
+        <widget name="marker_0x2" position="626,100" size="263,172" alphatest="blend" />
+        <widget name="logo_0x2" position="647,120" size="220,132" alphatest="blend" />
+        <widget name="marker_0x3" position="929,100" size="263,172" alphatest="blend" />
+        <widget name="logo_0x3" position="950,120" size="220,132" alphatest="blend" />
+        <widget name="marker_0x4" position="1232,100" size="263,172" alphatest="blend" />
+        <widget name="logo_0x4" position="1253,120" size="220,132" alphatest="blend" />
+        <widget name="marker_1x0" position="20,282" size="263,172" alphatest="blend" />
+        <widget name="logo_1x0" position="41,302" size="220,132" alphatest="blend" />
+        <widget name="marker_1x1" position="323,282" size="263,172" alphatest="blend" />
+        <widget name="logo_1x1" position="344,302" size="220,132" alphatest="blend" />
+        <widget name="marker_1x2" position="626,282" size="263,172" alphatest="blend" />
+        <widget name="logo_1x2" position="647,302" size="220,132" alphatest="blend" />
+        <widget name="marker_1x3" position="929,282" size="263,172" alphatest="blend" />
+        <widget name="logo_1x3" position="950,302" size="220,132" alphatest="blend" />
+        <widget name="marker_1x4" position="1232,282" size="263,172" alphatest="blend" />
+        <widget name="logo_1x4" position="1253,302" size="220,132" alphatest="blend" />
+        <widget name="marker_2x0" position="20,464" size="263,172" alphatest="blend" />
+        <widget name="logo_2x0" position="41,484" size="220,132" alphatest="blend" />
+        <widget name="marker_2x1" position="323,464" size="263,172" alphatest="blend" />
+        <widget name="logo_2x1" position="344,484" size="220,132" alphatest="blend" />
+        <widget name="marker_2x2" position="626,464" size="263,172" alphatest="blend" />
+        <widget name="logo_2x2" position="647,484" size="220,132" alphatest="blend" />
+        <widget name="marker_2x3" position="929,464" size="263,172" alphatest="blend" />
+        <widget name="logo_2x3" position="950,484" size="220,132" alphatest="blend" />
+        <widget name="marker_2x4" position="1232,464" size="263,172" alphatest="blend" />
+        <widget name="logo_2x4" position="1253,484" size="220,132" alphatest="blend" />
+        <widget name="description" position="20,705" zPosition="2" size="1460,50" foregroundColor="white" valign="center" halign="center" font="Regular;32" transparent="1" />
+        <ePixmap pixmap="/usr/lib/enigma2/python/Plugins/Extensions/AzmanPanel/icons/key_exit.png" position="1370,760" size="120,55" alphatest="blend" />
+        <ePixmap pixmap="/usr/lib/enigma2/python/Plugins/Extensions/AzmanPanel/icons/key_ok.png" position="1230,760" size="120,55" alphatest="blend" />
+    </screen>
+
+    <!-- POZOSTAŁE EKRANY BEZ ZMIAN -->
+    <screen name="AzmanFeedScreen" position="center,center" size="1280,720" title="Azman Feed - Menedżer pakietów">
+        <widget source="title" render="Label" position="15,10" size="1250,50" font="Regular;35" halign="center" valign="center" />
+        <widget name="list" position="15,70" size="1250,520" scrollbarMode="showOnDemand" />
+        <widget name="description" position="15,600" size="1250,50" font="Regular;28" halign="center" valign="center" foregroundColor="#cccccc" />
+        <ePixmap pixmap="/usr/share/enigma2/skin_default/buttons/key_green.png" position="15,670" size="40,40" alphatest="on" />
+        <widget source="key_green" render="Label" position="65,670" size="250,40" font="Regular;24" valign="center" />
+        <ePixmap pixmap="/usr/share/enigma2/skin_default/buttons/key_red.png" position="320,670" size="40,40" alphatest="on" />
+        <widget source="key_red" render="Label" position="370,670" size="250,40" font="Regular;24" valign="center" />
+        <ePixmap pixmap="/usr/share/enigma2/skin_default/buttons/key_yellow.png" position="635,670" size="40,40" alphatest="on" />
+        <widget source="key_yellow" render="Label" position="685,670" size="250,40" font="Regular;24" valign="center" />
+    </screen>
+    <screen name="OpkgCommandScreen" position="center,center" size="1280,720" title="Wykonywanie polecenia...">
+        <widget name="console" position="20,20" size="1240,680" font="Console;24" />
+    </screen>
+    <screen name="DownloadProgressScreen" position="center,center" size="800,150" title="Postęp...">
+        <widget source="title" render="Label" position="10,10" size="780,50" font="Regular;24" halign="center" />
+        <widget name="progress" position="10,70" size="780,20" />
+        <widget name="progresstext" position="10,100" size="780,40" font="Regular;20" halign="center" />
+    </screen>
+    <screen name="PiconPathSelectionScreen" position="center,center" size="1024,576" title="Wybierz lokalizację Picon">
+        <widget source="title" render="Label" position="20,15" size="984,50" font="Regular;40" halign="center" />
+        <widget name="list" position="20,90" size="984,380" scrollbarMode="showOnDemand" itemHeight="50" />
+        <ePixmap pixmap="/usr/share/enigma2/skin_default/buttons/key_green.png" position="20,530" size="40,40" alphatest="on" />
+        <widget source="key_green" render="Label" position="70,530" size="200,40" font="Regular;24" valign="center" />
+    </screen>
+    <screen name="AzmanSelectListScreen" position="center,center" size="1024,600" title="Wybierz elementy">
+        <widget source="title" render="Label" position="20,15" size="984,50" font="Regular;40" halign="center" />
+        <widget name="list" position="20,90" size="984,400" scrollbarMode="showOnDemand" itemHeight="50" />
+        <ePixmap pixmap="/usr/share/enigma2/skin_default/buttons/key_green.png" position="20,530" size="40,40" alphatest="on" />
+        <widget source="key_green" render="Label" position="70,530" size="250,40" font="Regular;24" valign="center" />
+        <ePixmap pixmap="/usr/share/enigma2/skin_default/buttons/key_yellow.png" position="330,530" size="40,40" alphatest="on" />
+        <widget source="key_yellow" render="Label" position="380,530" size="300,40" font="Regular;24" valign="center" />
+    </screen>
+    
+    <!-- EKRAN DLA YT RUNNER (WERSJA POPRAWIONA) -->
+    <screen name="YtRunnerScreen" position="center,center" size="1280,720" title="YT to m3u8 Generator">
+        <!-- ZMIANA: Zamiast 'source' i 'render', używamy 'name' -->
+        <widget name="console" position="20,20" size="1240,620" font="Console;24" />
+        
+        <ePixmap pixmap="/usr/share/enigma2/skin_default/buttons/key_green.png" position="20,670" size="40,40" alphatest="on" />
+        <widget source="key_green" render="Label" position="70,670" size="250,40" font="Regular;24" valign="center" />
+        <ePixmap pixmap="/usr/share/enigma2/skin_default/buttons/key_yellow.png" position="330,670" size="40,40" alphatest="on" />
+        <widget source="key_yellow" render="Label" position="380,670" size="300,40" font="Regular;24" valign="center" />
+    </screen>
+</skin>
